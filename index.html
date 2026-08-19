@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ಮಧ್ಯಾಹ್ನ ಉಪಾಹಾರ ಯೋಜನೆ ವರದಿ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1B3A5C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MDM ವರದಿ">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Kannada:wght@500;600;700&family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --ink:#1B3A5C;
+    --ink-deep:#122943;
+    --gold:#B9862F;
+    --gold-soft:#F4E6C8;
+    --paper:#FBF9F4;
+    --paper-line:#E4DFD2;
+    --sarkar-bg:#E4EDF7;
+    --sarkar-text:#1B3A5C;
+    --sarkar-bar:#3E6FA6;
+    --apf-bg:#FBF0DD;
+    --apf-text:#8A5A00;
+    --apf-bar:#C9922B;
+    --other-bg:#E9F3EA;
+    --other-text:#2F6B3B;
+    --other-bar:#4F9159;
+    --ok:#2F6B3B;
+    --warn:#B23B2E;
+    --shadow: 0 1px 3px rgba(18,41,67,0.08), 0 6px 18px rgba(18,41,67,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 500px at 10% -10%, #EFF3F8 0%, transparent 60%),
+      var(--paper);
+    color:var(--ink-deep);
+    font-family:'Noto Sans Kannada','Noto Sans',sans-serif;
+    font-feature-settings:"tnum" 1;
+    line-height:1.5;
+    padding: 28px 20px 80px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  /* ---------- Header / letterhead ---------- */
+  .letterhead{
+    display:flex;align-items:center;gap:18px;
+    padding:22px 26px;
+    background:linear-gradient(135deg, var(--ink) 0%, var(--ink-deep) 100%);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+  .letterhead::after{
+    content:"";
+    position:absolute; right:-40px; top:-40px;
+    width:180px;height:180px;border-radius:50%;
+    border:14px solid rgba(255,255,255,0.06);
+  }
+  .emblem{
+    width:56px;height:56px;flex:none;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--gold-soft), var(--gold) 65%, #8f6a1f 100%);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,0.35);
+  }
+  .emblem svg{width:30px;height:30px;}
+  .letterhead h1{
+    font-family:'Noto Serif Kannada',serif;
+    font-weight:700; font-size:1.5rem; margin:0 0 2px;
+    letter-spacing:0.2px;
+  }
+  .letterhead p{margin:0; font-size:0.92rem; color:#D8E2EE;}
+  .letterhead .tag{
+    margin-left:auto; text-align:right; font-size:0.8rem; color:#CFE0F2;
+    line-height:1.4;
+  }
+
+  /* ---------- Upload zone ---------- */
+  .upload-card{
+    margin-top:22px;
+    background:#fff;
+    border:1.5px dashed #C9BFA6;
+    border-radius:14px;
+    padding:26px;
+    text-align:center;
+    box-shadow:var(--shadow);
+    transition: border-color .2s, background .2s;
+  }
+  .upload-card.drag{ border-color:var(--gold); background:#FFFDF6; }
+  .upload-icon{
+    width:46px;height:46px;margin:0 auto 10px;
+    color:var(--gold);
+  }
+  .upload-card h2{
+    font-family:'Noto Serif Kannada',serif;
+    font-size:1.05rem; margin:0 0 6px; color:var(--ink-deep);
+  }
+  .upload-card .hint{font-size:0.85rem;color:#7A7261;margin-bottom:16px;}
+  .file-btn{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--ink); color:#fff; border:none;
+    padding:11px 22px; border-radius:9px; font-size:0.92rem; font-weight:600;
+    cursor:pointer; font-family:inherit;
+    transition: background .15s, transform .1s;
+  }
+  .file-btn:hover{background:var(--ink-deep);}
+  .file-btn:active{transform:translateY(1px);}
+  #fileInput{display:none;}
+  .filename-chip{
+    display:inline-flex; align-items:center; gap:8px;
+    margin-top:12px; font-size:0.85rem; color:var(--ink);
+    background:var(--sarkar-bg); padding:6px 14px; border-radius:999px;
+  }
+  .status-msg{margin-top:12px; font-size:0.87rem;}
+  .status-msg.error{color:var(--warn); font-weight:600;}
+  .status-msg.ok{color:var(--ok); font-weight:600;}
+
+  /* ---------- Report ---------- */
+  #reportArea{display:none; margin-top:26px;}
+  #reportArea.show{display:block;}
+
+  .toolbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px; gap:12px; flex-wrap:wrap;
+  }
+  .toolbar .meta{font-size:0.85rem; color:#6B7280;}
+  .btn-pdf{
+    display:inline-flex; align-items:center; gap:9px;
+    background:var(--gold); color:#fff; border:none;
+    padding:11px 20px; border-radius:9px; font-weight:700; font-size:0.9rem;
+    cursor:pointer; font-family:inherit;
+    box-shadow:0 4px 12px rgba(185,134,47,0.35);
+    transition: transform .1s, box-shadow .15s;
+  }
+  .btn-pdf:hover{ box-shadow:0 6px 16px rgba(185,134,47,0.45); }
+  .btn-pdf:active{ transform:translateY(1px); }
+  .btn-pdf svg{width:17px;height:17px;}
+
+  .toolbar-actions{ display:inline-flex; align-items:center; gap:10px; }
+  .btn-clear{
+    display:inline-flex; align-items:center; gap:9px;
+    background:#fff; color:var(--warn); border:1.5px solid var(--warn);
+    padding:10px 18px; border-radius:9px; font-weight:700; font-size:0.9rem;
+    cursor:pointer; font-family:inherit;
+    transition: background .15s, color .15s, transform .1s;
+  }
+  .btn-clear:hover{ background:var(--warn); color:#fff; }
+  .btn-clear:active{ transform:translateY(1px); }
+  .btn-clear svg{width:16px;height:16px;}
+
+  .btn-section{
+    display:inline-flex; align-items:center; gap:9px;
+    background:#fff; color:var(--ink); border:1.5px solid var(--ink);
+    padding:10px 18px; border-radius:9px; font-weight:700; font-size:0.9rem;
+    cursor:pointer; font-family:inherit;
+    transition: background .15s, color .15s, transform .1s;
+  }
+  .btn-section:hover{ background:var(--ink); color:#fff; }
+  .btn-section.active{ background:var(--ink); color:#fff; }
+  .btn-section:active{ transform:translateY(1px); }
+  .btn-section svg{width:16px;height:16px;}
+
+  .grouped-table thead tr.group-row th{
+    background:var(--ink-deep); font-size:0.8rem; letter-spacing:0.3px;
+    text-align:center; padding:10px 8px;
+  }
+  .grouped-table thead tr.group-row th.grp-total{ background:var(--ink); }
+  .grouped-table thead tr.group-row th.grp-apf{ background:var(--apf-bar); }
+  .grouped-table thead tr.group-row th.grp-govt{ background:var(--sarkar-bar); }
+  .grouped-table thead tr.sub-row th{ text-align:center; }
+  .grouped-table tbody td:first-child{ text-align:left; font-weight:600; }
+  .grouped-table td.grp-div{ border-left:2px solid var(--paper-line); }
+  .grouped-table tfoot td{ text-align:center; }
+  .grouped-table tfoot td:first-child{ text-align:left; }
+
+  .legend{
+    display:flex; gap:14px; flex-wrap:wrap; margin-bottom:6px;
+  }
+  .legend span{
+    display:inline-flex; align-items:center; gap:7px;
+    font-size:0.8rem; color:#5B5546;
+  }
+  .swatch{width:11px;height:11px;border-radius:3px; display:inline-block;}
+
+  /* ---------- Filter dropdowns ---------- */
+  .filter-dropdowns{
+    display:flex; gap:14px; flex-wrap:wrap; margin:16px 0 20px;
+  }
+  .filter-field{ display:flex; flex-direction:column; gap:5px; }
+  .filter-field label{
+    font-size:0.74rem; font-weight:700; color:#8A8367; letter-spacing:0.4px;
+  }
+  .filter-select{
+    appearance:none; -webkit-appearance:none;
+    background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="%231B3A5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 12px center;
+    background-size:16px;
+    border:1.5px solid var(--paper-line); color:var(--ink-deep);
+    padding:10px 38px 10px 16px; border-radius:9px; font-size:0.88rem; font-weight:600;
+    cursor:pointer; font-family:inherit; box-shadow:var(--shadow);
+    min-width:150px;
+    transition: border-color .15s;
+  }
+  .filter-select:focus{ outline:none; border-color:var(--gold); }
+  .filter-select.cat-ಸರಕಾರ{ border-color:var(--sarkar-bar); color:var(--sarkar-bar); }
+  .filter-select.cat-ಎಪಿಎಫ್{ border-color:var(--apf-bar); color:var(--apf-bar); }
+  .filter-select.cat-ಇತರೆ{ border-color:var(--other-bar); color:var(--other-bar); }
+
+  .stat-strip{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
+    margin:18px 0 26px;
+  }
+  .stat{
+    background:#fff; border:1px solid var(--paper-line); border-radius:12px;
+    padding:16px 18px; box-shadow:var(--shadow);
+  }
+  .stat .num{font-family:'Noto Serif Kannada',serif; font-size:1.6rem; font-weight:700; color:var(--ink);}
+  .stat .lbl{font-size:0.78rem; color:#7A7261; margin-top:2px;}
+
+  .panel{
+    background:#fff; border-radius:14px; box-shadow:var(--shadow);
+    border:1px solid var(--paper-line);
+    margin-bottom:24px; overflow:hidden;
+    page-break-inside:avoid; break-inside:avoid;
+  }
+  /* ವಿಭಾಗವಾರು ಪ್ಯಾನೆಲ್ ಯಾವಾಗಲೂ ಹೊಸ ಪುಟದಲ್ಲಿ ಆರಂಭವಾಗಿ, ಆ ಪುಟದೊಳಗೇ ಪೂರ್ಣವಾಗಿ ಹಿಡಿಸಬೇಕು —
+     ತರಗತಿಗಳ ಸಾಲುಗಳು ಎರಡು ಪುಟಗಳ ನಡುವೆ ಎಂದಿಗೂ ಒಡೆಯದಂತೆ */
+  #sectionWisePanel{
+    page-break-before:always; break-before:page;
+    page-break-inside:avoid; break-inside:avoid;
+  }
+  #sectionWisePanel table tr{
+    page-break-inside:avoid; break-inside:avoid;
+  }
+  #sectionWisePanel thead{
+    display:table-header-group;
+  }
+  .panel-head{
+    display:flex; align-items:baseline; gap:10px;
+    padding:16px 20px 12px; border-bottom:1px solid var(--paper-line);
+    background:linear-gradient(180deg, #fff, #FCFAF5);
+  }
+  .panel-head .idx{
+    font-family:'Noto Serif Kannada',serif; font-weight:700; color:var(--gold);
+    font-size:0.85rem; letter-spacing:1px;
+  }
+  .panel-head h3{
+    font-family:'Noto Serif Kannada',serif; font-size:1.05rem; margin:0; color:var(--ink-deep);
+  }
+  .panel-head .sub{font-size:0.78rem; color:#8A8367; margin-left:auto;}
+
+  table{width:100%; border-collapse:collapse; font-size:0.86rem;}
+  thead th{
+    background:var(--ink); color:#fff; text-align:right;
+    padding:10px 14px; font-weight:600; font-size:0.78rem;
+    white-space:nowrap;
+  }
+  thead th:first-child, thead th:nth-child(2), thead th:nth-child(3){text-align:right;}
+  tbody td{
+    padding:9px 14px; border-bottom:1px solid #EFEBE0; text-align:right;
+    white-space:nowrap;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr td:first-child{ position:relative; padding-right:18px; }
+  tbody tr td:first-child::before{
+    content:""; position:absolute; right:0; top:0; bottom:0; width:4px;
+  }
+  tr.cat-sarkar td:first-child::before{ background:var(--sarkar-bar); }
+  tr.cat-apf td:first-child::before{ background:var(--apf-bar); }
+  tr.cat-other td:first-child::before{ background:var(--other-bar); }
+  tr.cat-sarkar{background:var(--sarkar-bg);}
+  tr.cat-apf{background:var(--apf-bg);}
+  tr.cat-other{background:var(--other-bg);}
+  .cat-pill{
+    display:inline-block; padding:3px 10px; border-radius:999px; font-size:0.74rem; font-weight:700;
+  }
+  tr.cat-sarkar .cat-pill{background:var(--sarkar-text); color:#fff;}
+  tr.cat-apf .cat-pill{background:var(--apf-text); color:#fff;}
+  tr.cat-other .cat-pill{background:var(--other-text); color:#fff;}
+  tfoot td{
+    padding:11px 14px; font-weight:700; background:#F4F1E8; text-align:right;
+    border-top:2px solid var(--paper-line);
+  }
+  .pct-good{color:var(--ok); font-weight:700;}
+  .pct-bad{color:var(--warn); font-weight:700;}
+
+  .foot-note{
+    font-size:0.76rem; color:#8A8367; margin-top:4px; text-align:center;
+  }
+
+  /* ---------- Print / PDF specific ---------- */
+  @media print{
+    body{padding:0; background:#fff;}
+    .upload-card, .no-print{display:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="letterhead">
+    <div class="emblem">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="9" stroke="#5A4315" stroke-width="1.4"/>
+        <g stroke="#5A4315" stroke-width="1.1">
+          <line x1="12" y1="3" x2="12" y2="21"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/>
+          <line x1="18.4" y1="5.6" x2="5.6" y2="18.4"/>
+        </g>
+        <circle cx="12" cy="12" r="2.1" fill="#5A4315"/>
+      </svg>
+    </div>
+    <div>
+      <h1>ಮಧ್ಯಾಹ್ನ ಉಪಾಹಾರ ಯೋಜನೆ ವರದಿ</h1>
+      <p>ದಿನವಾರು · ಮಾಸಿಕವಾರು · ವರ್ಷವಾರು ಸಾರಾಂಶ — ಸರಕಾರ &amp; ಎಪಿಎಫ್ ವರ್ಗೀಕರಣ</p>
+    </div>
+    <div class="tag">ಸೋಮ–ಮಂಗಳ = ಸರಕಾರ · ಬುಧ–ಶನಿ = ಎಪಿಎಫ್<br>ಎಲ್‌ಕೆಜಿ · ಯುಕೆಜಿ · 1-5 · 6-7 ತರಗತಿ ವರ್ಗವಾರು</div>
+  </header>
+
+  <section class="upload-card no-print" id="uploadCard">
+    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 16V4M12 4L7 9M12 4l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <h2>ಎಕ್ಸೆಲ್ ಫೈಲ್ (.xlsx) ಅಪ್‌ಲೋಡ್ ಮಾಡಿ</h2>
+    <div class="hint">Timestamp, School, Date, Class, Enrollment, Attendance, Egg, Banana ಕಾಲಂಗಳಿರುವ ಫೈಲ್</div>
+    <label class="file-btn" for="fileInput">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ
+    </label>
+    <input type="file" id="fileInput" accept=".xlsx,.xls">
+    <div id="fileChipHolder"></div>
+    <div id="statusMsg" class="status-msg"></div>
+  </section>
+
+  <section id="reportArea">
+    <div class="toolbar">
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--sarkar-bar)"></i>ಸರಕಾರ (ಸೋಮ, ಮಂಗಳ)</span>
+        <span><i class="swatch" style="background:var(--apf-bar)"></i>ಎಪಿಎಫ್ (ಬುಧ, ಗುರು, ಶುಕ್ರ, ಶನಿ)</span>
+        <span><i class="swatch" style="background:var(--other-bar)"></i>ಇತರೆ (ಭಾನುವಾರ)</span>
+      </div>
+      <div class="toolbar-actions no-print">
+        <button class="btn-section" id="sectionWiseBtn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          ವಿಭಾಗವಾರು ವರದಿ
+        </button>
+        <button class="btn-section" id="sectionPdfBtn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          ವಿಭಾಗವಾರು PDF (1 ಪುಟ)
+        </button>
+        <button class="btn-clear" id="clearDataBtn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          ಡಾಟಾ ಕ್ಲಿಯರ್ ಮಾಡಿ
+        </button>
+        <button class="btn-pdf" id="downloadPdfBtn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" stroke="white" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          PDF ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-dropdowns no-print" id="filterDropdowns">
+      <div class="filter-field">
+        <label for="yearSelect">ವರ್ಷ</label>
+        <select class="filter-select" id="yearSelect">
+          <option value="ಎಲ್ಲಾ">ಎಲ್ಲಾ ವರ್ಷ</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="monthSelect">ತಿಂಗಳು</label>
+        <select class="filter-select" id="monthSelect">
+          <option value="ಎಲ್ಲಾ">ಎಲ್ಲಾ ತಿಂಗಳು</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="catSelect">ವರ್ಗ</label>
+        <select class="filter-select" id="catSelect">
+          <option value="ಒಟ್ಟು">ಒಟ್ಟು</option>
+          <option value="ಸರಕಾರ">ಸರಕಾರ</option>
+          <option value="ಎಪಿಎಫ್">ಎಪಿಎಫ್</option>
+          <option value="ಇತರೆ">ಇತರೆ</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="stat-strip" id="statStrip"></div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="idx">01</span><h3>ದಿನವಾರು ವರದಿ</h3><span class="sub" id="daySub"></span></div>
+      <div style="overflow-x:auto;"><table id="dayTable"></table></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="idx">02</span><h3>ಮಾಸಿಕವಾರು ವರದಿ</h3><span class="sub">ವರ್ಗವಾರು</span></div>
+      <div style="overflow-x:auto;"><table id="monthTable"></table></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="idx">03</span><h3>ವರ್ಷವಾರು ವರದಿ</h3><span class="sub">ವರ್ಗವಾರು</span></div>
+      <div style="overflow-x:auto;"><table id="yearTable"></table></div>
+    </div>
+
+    <div class="panel" id="sectionWisePanel" style="display:none;">
+      <div class="panel-head"><span class="idx">★</span><h3 id="sectionWiseTitle">ವಿಭಾಗವಾರು ವರದಿ</h3><span class="sub">ಒಟ್ಟು · ಎಪಿಎಫ್ · ಸರಕಾರ ಅಕ್ಕಪಕ್ಕ</span></div>
+      <div style="overflow-x:auto;"><table id="sectionWiseTable" class="grouped-table"></table></div>
+    </div>
+
+    <p class="foot-note">ಈ ವರದಿಯನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ ಎಕ್ಸೆಲ್ ಫೈಲ್‌ನಿಂದ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ರಚಿಸಲಾಗಿದೆ. ನಕಲಿ/ಶೂನ್ಯ ನಮೂದುಗಳನ್ನು ಸ್ವಚ್ಛಗೊಳಿಸಲಾಗಿದೆ.</p>
+  </section>
+
+</div>
+
+<script>
+const KN_DAY = ['ಭಾನುವಾರ','ಸೋಮವಾರ','ಮಂಗಳವಾರ','ಬುಧವಾರ','ಗುರುವಾರ','ಶುಕ್ರವಾರ','ಶನಿವಾರ'];
+const CAT_OF = { 0:'ಇತರೆ', 1:'ಸರಕಾರ', 2:'ಸರಕಾರ', 3:'ಎಪಿಎಫ್', 4:'ಎಪಿಎಫ್', 5:'ಎಪಿಎಫ್', 6:'ಎಪಿಎಫ್' };
+const CAT_CLASS = { 'ಸರಕಾರ':'cat-sarkar', 'ಎಪಿಎಫ್':'cat-apf', 'ಇತರೆ':'cat-other' };
+const KN_MONTH = ['ಜನವರಿ','ಫೆಬ್ರವರಿ','ಮಾರ್ಚ್','ಏಪ್ರಿಲ್','ಮೇ','ಜೂನ್','ಜುಲೈ','ಆಗಸ್ಟ್','ಸೆಪ್ಟೆಂಬರ್','ಅಕ್ಟೋಬರ್','ನವೆಂಬರ್','ಡಿಸೆಂಬರ್'];
+const CLASS_GROUP_ORDER = { 'ಎಲ್‌ಕೆಜಿ':0, 'ಯುಕೆಜಿ':1, '1-5':2, '6-7':3 };
+function classGroup(c){
+  const v = String(c).trim().toUpperCase();
+  if (v === 'LKG') return 'ಎಲ್‌ಕೆಜಿ';
+  if (v === 'UKG') return 'ಯುಕೆಜಿ';
+  const n = parseInt(v, 10);
+  if (!isNaN(n)){
+    if (n>=1 && n<=5) return '1-5';
+    if (n>=6 && n<=7) return '6-7';
+  }
+  return v;
+}
+const fmtNum = n => Number(n).toLocaleString('en-IN');
+const fmtPct = (a,b) => b>0 ? ((a/b)*100).toFixed(1)+'%' : '—';
+
+function excelDateToJs(v){
+  if (v instanceof Date) return v;
+  if (typeof v === 'number'){
+    // Excel serial date -> JS date (handles 1900 leap bug via XLSX util)
+    const d = XLSX.SSF.parse_date_code(v);
+    return new Date(Date.UTC(d.y, d.m-1, d.d, d.H||0, d.M||0, Math.floor(d.S||0)));
+  }
+  const parsed = new Date(v);
+  return isNaN(parsed) ? null : parsed;
+}
+function excelTimeToMs(v, dateFallback){
+  if (v instanceof Date) return v.getTime();
+  if (typeof v === 'number'){
+    const d = XLSX.SSF.parse_date_code(v);
+    return Date.UTC(d.y, d.m-1, d.d, d.H||0, d.M||0, Math.floor(d.S||0));
+  }
+  const parsed = new Date(v);
+  if (!isNaN(parsed)) return parsed.getTime();
+  return dateFallback ? dateFallback.getTime() : 0;
+}
+function ymd(d){
+  return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+}
+
+function findCol(headerRow, candidates){
+  for (const cand of candidates){
+    const idx = headerRow.findIndex(h => String(h||'').trim().toLowerCase() === cand.toLowerCase());
+    if (idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function processWorkbook(wb){
+  const sheetName = wb.SheetNames[0];
+  const ws = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval:null });
+  if (!rows.length) throw new Error('ಫೈಲ್‌ನಲ್ಲಿ ಡೇಟಾ ಇಲ್ಲ');
+
+  const header = rows[0];
+  const col = {
+    ts: findCol(header, ['Timestamp']),
+    school: findCol(header, ['School']),
+    date: findCol(header, ['Date']),
+    cls: findCol(header, ['Class']),
+    enr: findCol(header, ['Enrollment']),
+    att: findCol(header, ['Attendance']),
+    egg: findCol(header, ['Egg']),
+    ban: findCol(header, ['Banana'])
+  };
+  const required = ['date','cls','enr','att','egg','ban'];
+  for (const k of required){
+    if (col[k] === -1) throw new Error('ಅಗತ್ಯ ಕಾಲಂ ಸಿಗಲಿಲ್ಲ: ' + k);
+  }
+
+  let records = [];
+  for (let i=1; i<rows.length; i++){
+    const r = rows[i];
+    if (!r || r.every(v => v===null || v==='')) continue;
+    const dateVal = excelDateToJs(r[col.date]);
+    if (!dateVal) continue;
+    const dateKey = ymd(dateVal);
+    const cls = String(r[col.cls]).trim();
+    const enr = Number(r[col.enr])||0;
+    const att = Number(r[col.att])||0;
+    const egg = Number(r[col.egg])||0;
+    const ban = Number(r[col.ban])||0;
+    const tsMs = col.ts !== -1 ? excelTimeToMs(r[col.ts], dateVal) : (i);
+    records.push({
+      dateKey, dateVal, cls, enr, att, egg, ban, tsMs,
+      school: col.school!==-1 ? r[col.school] : ''
+    });
+  }
+  if (!records.length) throw new Error('ಮಾನ್ಯ ದಾಖಲೆಗಳು ಸಿಗಲಿಲ್ಲ');
+
+  // group by dateKey+class
+  const groups = new Map();
+  for (const rec of records){
+    const key = rec.dateKey + '||' + rec.cls;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(rec);
+  }
+
+  const cleaned = [];
+  for (const [key, list] of groups){
+    const allZero = list.filter(r => r.enr===0 && r.att===0 && r.egg===0 && r.ban===0);
+    const nonZero = list.filter(r => !(r.enr===0 && r.att===0 && r.egg===0 && r.ban===0));
+    let pool = nonZero.length ? nonZero : list; // if genuinely all zero, keep as-is
+    // keep latest by timestamp
+    pool = pool.slice().sort((a,b)=>a.tsMs-b.tsMs);
+    cleaned.push(pool[pool.length-1]);
+  }
+
+  // enrich with day/category/month/year/classgroup
+  for (const r of cleaned){
+    const dow = r.dateVal.getUTCDay();
+    r.dayKn = KN_DAY[dow];
+    r.cat = CAT_OF[dow];
+    r.monthKey = r.dateVal.getUTCFullYear()+'-'+String(r.dateVal.getUTCMonth()+1).padStart(2,'0');
+    r.monthLabel = KN_MONTH[r.dateVal.getUTCMonth()] + ' ' + r.dateVal.getUTCFullYear();
+    r.year = r.dateVal.getUTCFullYear();
+    r.cgroup = classGroup(r.cls);
+  }
+  cleaned.sort((a,b)=> a.dateKey.localeCompare(b.dateKey) || (CLASS_GROUP_ORDER[a.cgroup]-CLASS_GROUP_ORDER[b.cgroup]) || a.cls.localeCompare(b.cls));
+
+  return {
+    cleaned,
+    droppedCount: records.length - cleaned.length,
+    originalCount: records.length
+  };
+}
+
+function aggregateByDate(cleaned){
+  // now split by date + class group (still tagged with sarkar/apf category)
+  const map = new Map();
+  for (const r of cleaned){
+    const key = r.dateKey + '||' + r.cgroup;
+    if (!map.has(key)) map.set(key, {
+      dateKey:r.dateKey, dateVal:r.dateVal, dayKn:r.dayKn, cat:r.cat, cgroup:r.cgroup,
+      enr:0, att:0, egg:0, ban:0
+    });
+    const g = map.get(key);
+    g.enr += r.enr; g.att += r.att; g.egg += r.egg; g.ban += r.ban;
+  }
+  return Array.from(map.values()).sort((a,b)=>
+    a.dateKey.localeCompare(b.dateKey) || (CLASS_GROUP_ORDER[a.cgroup]-CLASS_GROUP_ORDER[b.cgroup])
+  );
+}
+
+function aggregateByGroup(cleaned, keyFn, labelFn){
+  // split by (period) + class group + category
+  const map = new Map();
+  for (const r of cleaned){
+    const key = keyFn(r) + '||' + r.cgroup + '||' + r.cat;
+    if (!map.has(key)) map.set(key, {
+      label: labelFn(r), cat:r.cat, cgroup:r.cgroup, enr:0, att:0, egg:0, ban:0, sortKey:keyFn(r)
+    });
+    const g = map.get(key);
+    g.enr += r.enr; g.att += r.att; g.egg += r.egg; g.ban += r.ban;
+  }
+  const CAT_ORDER = {'ಸರಕಾರ':0,'ಎಪಿಎಫ್':1,'ಇತರೆ':2};
+  return Array.from(map.values()).sort((a,b)=>
+    a.sortKey.localeCompare(b.sortKey) ||
+    (CLASS_GROUP_ORDER[a.cgroup]-CLASS_GROUP_ORDER[b.cgroup]) ||
+    (CAT_ORDER[a.cat]-CAT_ORDER[b.cat])
+  );
+}
+
+function pctClass(p){
+  const v = parseFloat(p);
+  if (isNaN(v)) return '';
+  return v>=75 ? 'pct-good' : (v<60 ? 'pct-bad' : '');
+}
+
+function renderDayTable(dayRows){
+  const t = document.getElementById('dayTable');
+  let html = `<thead><tr>
+    <th style="text-align:left">ದಿನಾಂಕ</th><th style="text-align:left">ದಿನ</th><th style="text-align:left">ತರಗತಿ ವರ್ಗ</th><th style="text-align:left">ವರ್ಗ</th>
+    <th>ದಾಖಲಾತಿ</th><th>ಹಾಜರಾತಿ</th><th>ಮೊಟ್ಟೆ</th><th>ಬಾಳೆಹಣ್ಣು</th><th>ಹಾಜರಾತಿ %</th>
+  </tr></thead><tbody>`;
+  let totE=0,totA=0,totEg=0,totB=0;
+  for (const r of dayRows){
+    const pct = fmtPct(r.att, r.enr);
+    totE+=r.enr; totA+=r.att; totEg+=r.egg; totB+=r.ban;
+    html += `<tr class="${CAT_CLASS[r.cat]}">
+      <td style="text-align:left">${r.dateKey}</td>
+      <td style="text-align:left">${r.dayKn}</td>
+      <td style="text-align:left">${r.cgroup}</td>
+      <td style="text-align:left"><span class="cat-pill">${r.cat}</span></td>
+      <td>${fmtNum(r.enr)}</td><td>${fmtNum(r.att)}</td><td>${fmtNum(r.egg)}</td><td>${fmtNum(r.ban)}</td>
+      <td class="${pctClass(pct)}">${pct}</td>
+    </tr>`;
+  }
+  html += `</tbody><tfoot><tr>
+    <td colspan="4" style="text-align:left">ಒಟ್ಟು</td>
+    <td>${fmtNum(totE)}</td><td>${fmtNum(totA)}</td><td>${fmtNum(totEg)}</td><td>${fmtNum(totB)}</td>
+    <td>${fmtPct(totA,totE)}</td>
+  </tr></tfoot>`;
+  t.innerHTML = html;
+}
+
+function renderGroupTable(elId, rows, firstColLabel){
+  const t = document.getElementById(elId);
+  let html = `<thead><tr>
+    <th style="text-align:left">${firstColLabel}</th><th style="text-align:left">ತರಗತಿ ವರ್ಗ</th><th style="text-align:left">ವರ್ಗ</th>
+    <th>ದಾಖಲಾತಿ</th><th>ಹಾಜರಾತಿ</th><th>ಮೊಟ್ಟೆ</th><th>ಬಾಳೆಹಣ್ಣು</th><th>ಹಾಜರಾತಿ %</th>
+  </tr></thead><tbody>`;
+  let totE=0,totA=0,totEg=0,totB=0;
+  for (const r of rows){
+    const pct = fmtPct(r.att, r.enr);
+    totE+=r.enr; totA+=r.att; totEg+=r.egg; totB+=r.ban;
+    html += `<tr class="${CAT_CLASS[r.cat]}">
+      <td style="text-align:left">${r.label}</td>
+      <td style="text-align:left">${r.cgroup}</td>
+      <td style="text-align:left"><span class="cat-pill">${r.cat}</span></td>
+      <td>${fmtNum(r.enr)}</td><td>${fmtNum(r.att)}</td><td>${fmtNum(r.egg)}</td><td>${fmtNum(r.ban)}</td>
+      <td class="${pctClass(pct)}">${pct}</td>
+    </tr>`;
+  }
+  html += `</tbody><tfoot><tr>
+    <td colspan="3" style="text-align:left">ಒಟ್ಟು</td>
+    <td>${fmtNum(totE)}</td><td>${fmtNum(totA)}</td><td>${fmtNum(totEg)}</td><td>${fmtNum(totB)}</td>
+    <td>${fmtPct(totA,totE)}</td>
+  </tr></tfoot>`;
+  t.innerHTML = html;
+}
+
+function renderStats(cleaned, dayRows){
+  const totE = cleaned.reduce((s,r)=>s+r.enr,0);
+  const totA = cleaned.reduce((s,r)=>s+r.att,0);
+  const dates = new Set(dayRows.map(r=>r.dateKey)).size;
+  const schools = new Set(cleaned.map(r=>r.school)).size;
+  const stat = document.getElementById('statStrip');
+  stat.innerHTML = `
+    <div class="stat"><div class="num">${dates}</div><div class="lbl">ಒಟ್ಟು ದಿನಗಳು</div></div>
+    <div class="stat"><div class="num">${fmtNum(totE)}</div><div class="lbl">ಒಟ್ಟು ದಾಖಲಾತಿ</div></div>
+    <div class="stat"><div class="num">${fmtNum(totA)}</div><div class="lbl">ಒಟ್ಟು ಹಾಜರಾತಿ</div></div>
+    <div class="stat"><div class="num">${fmtPct(totA,totE)}</div><div class="lbl">ಸರಾಸರಿ ಹಾಜರಾತಿ %</div></div>
+  `;
+}
+
+function showStatus(msg, kind){
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = 'status-msg ' + (kind||'');
+}
+
+/* ---------- Section-wise (individual class) report: ಒಟ್ಟು / ಎಪಿಎಫ್ / ಸರಕಾರ side-by-side ---------- */
+function classSortKey(cls){
+  const v = String(cls).trim().toUpperCase();
+  if (v === 'LKG') return [0, 0];
+  if (v === 'UKG') return [1, 0];
+  const n = parseInt(v, 10);
+  if (!isNaN(n)) return [2, n];
+  return [3, v];
+}
+function displayClassLabel(cls){
+  const v = String(cls).trim().toUpperCase();
+  if (v === 'LKG') return 'ಎಲ್‌ಕೆಜಿ';
+  if (v === 'UKG') return 'ಯುಕೆಜಿ';
+  return String(cls).trim();
+}
+function blank4(){ return {enr:0,att:0,egg:0,ban:0}; }
+function add4(dst, src){ dst.enr+=src.enr; dst.att+=src.att; dst.egg+=src.egg; dst.ban+=src.ban; }
+
+function aggregateByClassSplit(cleaned){
+  const map = new Map();
+  for (const r of cleaned){
+    const key = r.cls;
+    if (!map.has(key)) map.set(key, { cls:r.cls, total:blank4(), apf:blank4(), govt:blank4() });
+    const g = map.get(key);
+    const rec4 = { enr:r.enr, att:r.att, egg:r.egg, ban:r.ban };
+    add4(g.total, rec4);
+    if (r.cat === 'ಎಪಿಎಫ್') add4(g.apf, rec4);
+    else if (r.cat === 'ಸರಕಾರ') add4(g.govt, rec4);
+    // ಇತರೆ (ಭಾನುವಾರ) only counted in ಒಟ್ಟು, matching template's APF/Govt-only split columns
+  }
+  const rows = Array.from(map.values());
+  rows.sort((a,b)=>{
+    const ka = classSortKey(a.cls), kb = classSortKey(b.cls);
+    if (ka[0] !== kb[0]) return ka[0]-kb[0];
+    return (typeof ka[1]==='number' && typeof kb[1]==='number') ? ka[1]-kb[1] : String(ka[1]).localeCompare(String(kb[1]));
+  });
+  return rows;
+}
+
+function renderSectionWiseTable(rows){
+  const t = document.getElementById('sectionWiseTable');
+  const cell = v => `<td>${fmtNum(v)}</td>`;
+  const cellDiv = v => `<td class="grp-div">${fmtNum(v)}</td>`;
+
+  let html = `<thead>
+    <tr class="group-row">
+      <th rowspan="2" style="text-align:left">ತರಗತಿ</th>
+      <th colspan="4" class="grp-total">ಒಟ್ಟು</th>
+      <th colspan="4" class="grp-apf">ಎಪಿಎಫ್</th>
+      <th colspan="4" class="grp-govt">ಸರಕಾರ</th>
+    </tr>
+    <tr class="sub-row">
+      <th>ದಾಖಲಾತಿ</th><th>ಹಾಜರಾತಿ</th><th>ಮೊಟ್ಟೆ</th><th>ಬಾಳೆಹಣ್ಣು</th>
+      <th class="grp-div">ದಾಖಲಾತಿ</th><th>ಹಾಜರಾತಿ</th><th>ಮೊಟ್ಟೆ</th><th>ಬಾಳೆಹಣ್ಣು</th>
+      <th class="grp-div">ದಾಖಲಾತಿ</th><th>ಹಾಜರಾತಿ</th><th>ಮೊಟ್ಟೆ</th><th>ಬಾಳೆಹಣ್ಣು</th>
+    </tr>
+  </thead><tbody>`;
+
+  const gt = { total:blank4(), apf:blank4(), govt:blank4() };
+  for (const r of rows){
+    add4(gt.total, r.total); add4(gt.apf, r.apf); add4(gt.govt, r.govt);
+    html += `<tr>
+      <td style="text-align:left">${displayClassLabel(r.cls)}</td>
+      ${cell(r.total.enr)}${cell(r.total.att)}${cell(r.total.egg)}${cell(r.total.ban)}
+      ${cellDiv(r.apf.enr)}${cell(r.apf.att)}${cell(r.apf.egg)}${cell(r.apf.ban)}
+      ${cellDiv(r.govt.enr)}${cell(r.govt.att)}${cell(r.govt.egg)}${cell(r.govt.ban)}
+    </tr>`;
+  }
+  html += `</tbody><tfoot><tr>
+    <td style="text-align:left">Grand Total</td>
+    ${cell(gt.total.enr)}${cell(gt.total.att)}${cell(gt.total.egg)}${cell(gt.total.ban)}
+    ${cellDiv(gt.apf.enr)}${cell(gt.apf.att)}${cell(gt.apf.egg)}${cell(gt.apf.ban)}
+    ${cellDiv(gt.govt.enr)}${cell(gt.govt.att)}${cell(gt.govt.egg)}${cell(gt.govt.ban)}
+  </tr></tfoot>`;
+  t.innerHTML = html;
+}
+
+function renderSectionWise(){
+  const { year, month } = currentFilters();
+  let cleaned = ALL_CLEANED;
+  if (year !== 'ಎಲ್ಲಾ') cleaned = cleaned.filter(r => String(r.year) === String(year));
+  if (month !== 'ಎಲ್ಲಾ') cleaned = cleaned.filter(r => r.monthKey === month);
+
+  renderSectionWiseTable(aggregateByClassSplit(cleaned));
+
+  let label;
+  if (month !== 'ಎಲ್ಲಾ' && cleaned.length) label = cleaned[0].monthLabel;
+  else if (year !== 'ಎಲ್ಲಾ') label = year + ' ವರ್ಷ';
+  else label = 'ಎಲ್ಲಾ ಅವಧಿ';
+  document.getElementById('sectionWiseTitle').textContent = 'ವಿಭಾಗವಾರು ವರದಿ — ' + label;
+}
+
+document.getElementById('sectionWiseBtn').addEventListener('click', function(){
+  const panel = document.getElementById('sectionWisePanel');
+  const isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? '' : 'none';
+  this.classList.toggle('active', isHidden);
+  if (isHidden) renderSectionWise();
+});
+
+let ALL_CLEANED = [];
+let ORIGINAL_COUNT = 0;
+let DROPPED_COUNT = 0;
+
+function populateFilterOptions(cleaned){
+  const yearSel = document.getElementById('yearSelect');
+  const monthSel = document.getElementById('monthSelect');
+
+  const years = Array.from(new Set(cleaned.map(r=>r.year))).sort((a,b)=>a-b);
+  yearSel.innerHTML = '<option value="ಎಲ್ಲಾ">ಎಲ್ಲಾ ವರ್ಷ</option>' +
+    years.map(y=>`<option value="${y}">${y}</option>`).join('');
+
+  const months = Array.from(new Set(cleaned.map(r=>r.monthKey))).sort();
+  monthSel.innerHTML = '<option value="ಎಲ್ಲಾ">ಎಲ್ಲಾ ತಿಂಗಳು</option>' +
+    months.map(mk=>{
+      const rec = cleaned.find(r=>r.monthKey===mk);
+      return `<option value="${mk}">${rec.monthLabel}</option>`;
+    }).join('');
+}
+
+function currentFilters(){
+  return {
+    year: document.getElementById('yearSelect').value,
+    month: document.getElementById('monthSelect').value,
+    cat: document.getElementById('catSelect').value
+  };
+}
+
+function renderReport(){
+  const { year, month, cat } = currentFilters();
+  let cleaned = ALL_CLEANED;
+  if (year !== 'ಎಲ್ಲಾ') cleaned = cleaned.filter(r => String(r.year) === String(year));
+  if (month !== 'ಎಲ್ಲಾ') cleaned = cleaned.filter(r => r.monthKey === month);
+  if (cat !== 'ಒಟ್ಟು') cleaned = cleaned.filter(r => r.cat === cat);
+
+  const dayRows = aggregateByDate(cleaned);
+  const monthRows = aggregateByGroup(cleaned, r=>r.monthKey, r=>r.monthLabel);
+  const yearRows = aggregateByGroup(cleaned, r=>String(r.year), r=>String(r.year));
+
+  renderStats(cleaned, dayRows);
+  renderDayTable(dayRows);
+  renderGroupTable('monthTable', monthRows, 'ತಿಂಗಳು');
+  renderGroupTable('yearTable', yearRows, 'ವರ್ಷ');
+
+  const parts = [];
+  if (year !== 'ಎಲ್ಲಾ') parts.push('ವರ್ಷ: ' + year);
+  if (month !== 'ಎಲ್ಲಾ') parts.push('ತಿಂಗಳು: ' + (cleaned[0] ? cleaned[0].monthLabel : month));
+  if (cat !== 'ಒಟ್ಟು') parts.push('ವರ್ಗ: ' + cat);
+  const filterNote = parts.length ? ' · ಫಿಲ್ಟರ್: ' + parts.join(', ') : '';
+
+  document.getElementById('daySub').textContent =
+    `${ORIGINAL_COUNT} ಸಾಲುಗಳಿಂದ ${DROPPED_COUNT} ನಕಲಿ/ದೋಷಪೂರಿತ ನಮೂದುಗಳನ್ನು ತೆಗೆದುಹಾಕಲಾಗಿದೆ${filterNote}`;
+
+  const catSel = document.getElementById('catSelect');
+  catSel.className = 'filter-select' + (cat !== 'ಒಟ್ಟು' ? ' cat-' + cat : '');
+
+  const sectionPanel = document.getElementById('sectionWisePanel');
+  if (sectionPanel.style.display !== 'none') renderSectionWise();
+}
+
+['yearSelect','monthSelect','catSelect'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', renderReport);
+});
+
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('fileChipHolder').innerHTML =
+    `<div class="filename-chip">📄 ${file.name}</div>`;
+  showStatus('ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲಾಗುತ್ತಿದೆ...', '');
+
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      const data = new Uint8Array(evt.target.result);
+      const wb = XLSX.read(data, { type:'array', cellDates:false });
+      const { cleaned, droppedCount, originalCount } = processWorkbook(wb);
+
+      ALL_CLEANED = cleaned;
+      ORIGINAL_COUNT = originalCount;
+      DROPPED_COUNT = droppedCount;
+
+      populateFilterOptions(cleaned);
+      document.getElementById('yearSelect').value = 'ಎಲ್ಲಾ';
+      document.getElementById('monthSelect').value = 'ಎಲ್ಲಾ';
+      document.getElementById('catSelect').value = 'ಒಟ್ಟು';
+
+      renderReport();
+
+      document.getElementById('reportArea').classList.add('show');
+      showStatus('ವರದಿ ಸಿದ್ಧವಾಗಿದೆ ✓', 'ok');
+    }catch(err){
+      console.error(err);
+      showStatus('ದೋಷ: ' + err.message, 'error');
+      document.getElementById('reportArea').classList.remove('show');
+    }
+  };
+  reader.onerror = function(){ showStatus('ಫೈಲ್ ಓದಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ', 'error'); };
+  reader.readAsArrayBuffer(file);
+});
+
+document.getElementById('clearDataBtn').addEventListener('click', function(){
+  ALL_CLEANED = [];
+  ORIGINAL_COUNT = 0;
+  DROPPED_COUNT = 0;
+
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileChipHolder').innerHTML = '';
+  document.getElementById('yearSelect').innerHTML = '<option value="ಎಲ್ಲಾ">ಎಲ್ಲಾ ವರ್ಷ</option>';
+  document.getElementById('monthSelect').innerHTML = '<option value="ಎಲ್ಲಾ">ಎಲ್ಲಾ ತಿಂಗಳು</option>';
+  document.getElementById('catSelect').value = 'ಒಟ್ಟು';
+  document.getElementById('catSelect').className = 'filter-select';
+  document.getElementById('dayTable').innerHTML = '';
+  document.getElementById('monthTable').innerHTML = '';
+  document.getElementById('yearTable').innerHTML = '';
+  document.getElementById('statStrip').innerHTML = '';
+  document.getElementById('daySub').textContent = '';
+  document.getElementById('sectionWiseTable').innerHTML = '';
+  document.getElementById('sectionWisePanel').style.display = 'none';
+  document.getElementById('sectionWiseBtn').classList.remove('active');
+
+  document.getElementById('reportArea').classList.remove('show');
+  showStatus('ಡಾಟಾ ಕ್ಲಿಯರ್ ಮಾಡಲಾಗಿದೆ. ಹೊಸ ಫೈಲ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.', 'ok');
+});
+
+document.getElementById('sectionPdfBtn').addEventListener('click', async function(){
+  if (!ALL_CLEANED.length){
+    showStatus('ಮೊದಲು ಎಕ್ಸೆಲ್ ಫೈಲ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ', 'error');
+    return;
+  }
+  const panel = document.getElementById('sectionWisePanel');
+  const toggleBtn = document.getElementById('sectionWiseBtn');
+  const wasHidden = panel.style.display === 'none';
+  if (wasHidden){
+    panel.style.display = '';
+    toggleBtn.classList.add('active');
+    renderSectionWise();
+    // let the browser paint the freshly-shown panel before capturing it
+    await new Promise(r => setTimeout(r, 60));
+  }
+
+  const btn = this;
+  btn.disabled = true;
+  const origText = btn.innerHTML;
+  btn.innerHTML = 'ತಯಾರಿಸಲಾಗುತ್ತಿದೆ...';
+
+  try{
+    // html2pdf.bundle.min.js bundles html2canvas + jsPDF internally without
+    // exposing them as separate window globals, so we drive everything
+    // through html2pdf's own worker/promise chain instead.
+    const worker = html2pdf().set({
+      margin: 0,
+      image: { type:'jpeg', quality:0.98 },
+      html2canvas: { scale:2, useCORS:true, backgroundColor:'#ffffff' },
+      jsPDF: { unit:'mm', format:'a4', orientation:'landscape' }
+    }).from(panel);
+
+    const canvas = await worker.toCanvas().get('canvas');
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+    // Grab a real jsPDF instance from the worker so we can build a fresh,
+    // single-page document without relying on any global constructor.
+    const tmpPdf = await worker.toPdf().get('pdf');
+    const JsPdfCtor = tmpPdf.constructor;
+    const pdf = new JsPdfCtor({ unit:'mm', format:'a4', orientation:'landscape' });
+
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 10;
+    const maxW = pageW - margin*2;
+    const maxH = pageH - margin*2;
+    const ratio = canvas.width / canvas.height;
+    let w = maxW, h = maxW / ratio;
+    if (h > maxH){ h = maxH; w = maxH * ratio; }
+    const x = (pageW - w) / 2;
+    const y = (pageH - h) / 2;
+    pdf.addImage(imgData, 'JPEG', x, y, w, h);
+    pdf.save('ವಿಭಾಗವಾರು_ವರದಿ.pdf');
+  }catch(err){
+    console.error(err);
+    showStatus('PDF ರಚಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ: ' + (err && err.message ? err.message : ''), 'error');
+  }finally{
+    if (wasHidden){
+      panel.style.display = 'none';
+      toggleBtn.classList.remove('active');
+    }
+    btn.disabled = false;
+    btn.innerHTML = origText;
+  }
+});
+
+document.getElementById('downloadPdfBtn').addEventListener('click', function(){
+  const el = document.getElementById('reportArea');
+  const btn = this;
+  btn.disabled = true;
+  const origText = btn.innerHTML;
+  btn.innerHTML = 'ತಯಾರಿಸಲಾಗುತ್ತಿದೆ...';
+  const opt = {
+    margin: [10,8,10,8],
+    filename: 'MDM_ವರದಿ.pdf',
+    image: { type:'jpeg', quality:0.98 },
+    html2canvas: { scale:2, useCORS:true },
+    jsPDF: { unit:'mm', format:'a4', orientation:'landscape' },
+    pagebreak: { mode:['css'], avoid: ['tr', '.panel-head', '#sectionWisePanel'] }
+  };
+  html2pdf().set(opt).from(el).save().then(()=>{
+    btn.disabled = false; btn.innerHTML = origText;
+  }).catch(()=>{
+    btn.disabled = false; btn.innerHTML = origText;
+  });
+});
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>

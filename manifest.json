@@ -1,0 +1,39 @@
+{
+  "name": "ಮಧ್ಯಾಹ್ನ ಉಪಾಹಾರ ಯೋಜನೆ ವರದಿ",
+  "short_name": "MDM ವರದಿ",
+  "description": "ಮಧ್ಯಾಹ್ನ ಉಪಾಹಾರ ಯೋಜನೆ (MDM) ಹಾಜರಾತಿ ವರದಿ ರಚಿಸುವ ಆ್ಯಪ್",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F3EA",
+  "theme_color": "#1B3A5C",
+  "lang": "kn",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
